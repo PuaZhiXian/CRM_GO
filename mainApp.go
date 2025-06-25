@@ -4,7 +4,7 @@ import (
 	"context"
 	"crm-backend/db"
 	"crm-backend/db/httpx"
-	"crm-backend/respository"
+	"crm-backend/handlers"
 	"log"
 	"os"
 	"os/signal"
@@ -20,17 +20,13 @@ func main() {
 	}
 	defer db.Close()
 
-	u := &respository.Handler{
-		UserDao: &respository.UserDao{
-			DB: db,
-		},
-	}
+	handler := handlers.InitHandle(db)
 
 	port := "8080"
 	readTimeOut := time.Second * 30
 	writeTimeOut := time.Second * 30
 	server := httpx.NewServer(port, readTimeOut, writeTimeOut)
-	server.Start([]httpx.Router{u})
+	server.Start([]httpx.Router{handler})
 
 	defer func() {
 		if err := server.ShutDown(context.Background()); err != nil {

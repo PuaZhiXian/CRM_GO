@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ func writeError(w http.ResponseWriter, msg string, code int) {
 		Message: msg,
 	}
 
+	log.Println("Error Msg " + msg)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
