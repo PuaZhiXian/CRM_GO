@@ -45,8 +45,8 @@ func (s Server) handler(routers []Router) http.Handler {
 	return r
 }
 
-func (s *Server) Start(routers []Router) {
-	s.svr.Handler = s.handler(routers)
+func (s *Server) Start(handler http.Handler) {
+	s.svr.Handler = handler
 	go func() {
 		err := s.svr.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {

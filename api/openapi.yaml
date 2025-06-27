@@ -1,0 +1,36 @@
+openapi: 3.1.1
+info:
+  title: CRM API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: user
+    description: User Management
+paths:
+  /create-user:
+    post:
+      tags:
+        - user
+      operationId: CreateUser
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        201':
+          description: Created
+          content:
+          text/plain:
+            schema:
+              type: string
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string
