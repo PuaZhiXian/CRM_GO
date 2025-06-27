@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"crm-backend/db"
-	"crm-backend/db/httpx"
-	"crm-backend/handlers"
+	"crm-backend/cmd/db"
+	"crm-backend/internal/httpx"
 	"log"
 	"os"
 	"os/signal"
@@ -18,9 +17,10 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	defer db.Close()
+	mysqlDb, _ := db.DB()
+	defer mysqlDb.Close()
 
-	handler := handlers.InitHandle(db)
+	handler := httpx.InitHandle(db)
 
 	port := "8080"
 	readTimeOut := time.Second * 30

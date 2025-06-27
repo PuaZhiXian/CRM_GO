@@ -1,22 +1,22 @@
-package handlers
+package httpx
 
 import (
-	"crm-backend/internal/util"
-	"crm-backend/models"
-	"crm-backend/respository"
-	"crm-backend/service"
-	"database/sql"
+	"crm-backend/internal/models"
+	"crm-backend/internal/respository"
+	"crm-backend/internal/service"
+	"crm-backend/pkg/util"
 	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
 	UserService service.UserService
 }
 
-func InitHandle(db *sql.DB) *Handler {
+func InitHandle(db *gorm.DB) *Handler {
 	userDao := &respository.UserDao{DB: db}
 	userService := service.UserService{UserDao: userDao}
 	return &Handler{UserService: userService}
@@ -28,7 +28,11 @@ func (h *Handler) CreateUser() http.HandlerFunc {
 		if ok := decodeDataFromReq(w, r, user); !ok {
 			return
 		}
-		resp := h.UserService.CreateUser(user)
+		err, resp := h.UserService.CreateUser(user)
+		if err != nil {
+			util.InternalErrHandler(w)
+			return
+		}
 		util.JSON(w, http.StatusCreated, resp)
 	}
 }

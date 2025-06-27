@@ -1,24 +1,28 @@
 package respository
 
 import (
-	"crm-backend/models"
-	"database/sql"
-	"log"
+	"crm-backend/internal/models"
+	"crm-backend/pkg/util"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserDao struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
-func (u *UserDao) CreateUser(user *models.User) {
-	log.Println("inserting data to db ", user)
-	//TODO INSERT DATA TO DB
+func (u *UserDao) CreateUser(user *models.User) error {
+	result := u.DB.Create(user)
+	if result.Error != nil {
+		return util.ErrUnexpected
+	}
+	return nil
 }
+
 func (u *UserDao) FindUserById(id string) *models.User {
-	//TODO RETURN USER
 	user := models.User{
-		Id:          "1",
+		Id:          1,
 		Name:        "Hello World",
 		CreatedDate: time.Now(),
 		UpdatedDate: time.Now(),

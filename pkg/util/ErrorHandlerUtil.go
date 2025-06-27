@@ -8,6 +8,7 @@ import (
 )
 
 var ErrBadRequest = errors.New("bad request")
+var ErrUnexpected =  errors.New("unexpected error")
 
 type Error struct {
 	Code    int

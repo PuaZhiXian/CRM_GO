@@ -1,11 +1,9 @@
 package respository
 
-import (
-	"crm-backend/models"
-)
+import "crm-backend/internal/models"
 
 type UserDaoInterface interface {
-	CreateUser(user *models.User)
+	CreateUser(user *models.User) error
 	FindUserById(id string) *models.User
 	UpdateUser(user *models.User)
 	DeleteUserById(id string)
