@@ -27,10 +27,78 @@ paths:
           text/plain:
             schema:
               type: string
+  /create-user-by-bulk:
+    post:
+      tags:
+        - user
+      operationId: CreateUserByBulk
+      summary: Create multiple new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateUserRespWrapper"
 components:
   schemas:
     User:
       type: object
       properties:
+        row:
+          type: integer
+          format: int32
         name:
+          type: string
+        nationality:
+          type: string
+        residential:
+          type: string
+        age:
+          type: integer
+          format: int32
+    CreateUserRespWrapper:
+      type: object
+      properties:
+        successUser:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateUserRespSuccess"
+        failedUser:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateUserRespFailed"
+    CreateUserRespSuccess:
+      type: object
+      properties:
+        name:
+          type: string
+        nationality:
+          type: string
+        residential:
+          type: string
+        age:
+          type: integer
+          format: uint32
+    CreateUserRespFailed:
+      type: object
+      properties:
+        name:
+          type: string
+        nationality:
+          type: string
+        residential:
+          type: string
+        age:
+          type: integer
+          format: uint32
+        reason:
           type: string

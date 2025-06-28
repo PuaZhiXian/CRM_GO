@@ -26,11 +26,21 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err, resp := h.UserService.CreateUser(user)
+	resp, err := h.UserService.CreateUser(user)
 	if err != nil {
 		util.InternalErrHandler(w)
 		return
 	}
 
 	util.JSON(w, http.StatusCreated, resp)
+}
+
+func (h *Handler) CreateUserByBulk(w http.ResponseWriter, r *http.Request) {
+	var user []models.User
+	if ok := util.DecodeDataFromReq(w, r, &user); !ok {
+		return
+	}
+
+	respWrapper := h.UserService.CreateUserByBulk(&user)
+	util.JSON(w, http.StatusCreated, respWrapper)
 }

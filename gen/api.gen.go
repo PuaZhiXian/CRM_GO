@@ -10,19 +10,55 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// CreateUserRespFailed defines model for CreateUserRespFailed.
+type CreateUserRespFailed struct {
+	Age         *uint32 `json:"age,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Nationality *string `json:"nationality,omitempty"`
+	Reason      *string `json:"reason,omitempty"`
+	Residential *string `json:"residential,omitempty"`
+}
+
+// CreateUserRespSuccess defines model for CreateUserRespSuccess.
+type CreateUserRespSuccess struct {
+	Age         *uint32 `json:"age,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Nationality *string `json:"nationality,omitempty"`
+	Residential *string `json:"residential,omitempty"`
+}
+
+// CreateUserRespWrapper defines model for CreateUserRespWrapper.
+type CreateUserRespWrapper struct {
+	FailedUser  *[]CreateUserRespFailed  `json:"failedUser,omitempty"`
+	SuccessUser *[]CreateUserRespSuccess `json:"successUser,omitempty"`
+}
+
 // User defines model for User.
 type User struct {
-	Name *string `json:"name,omitempty"`
+	Age         *int32  `json:"age,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Nationality *string `json:"nationality,omitempty"`
+	Residential *string `json:"residential,omitempty"`
+	Row         *int32  `json:"row,omitempty"`
 }
+
+// CreateUserByBulkJSONBody defines parameters for CreateUserByBulk.
+type CreateUserByBulkJSONBody = []User
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = User
+
+// CreateUserByBulkJSONRequestBody defines body for CreateUserByBulk for application/json ContentType.
+type CreateUserByBulkJSONRequestBody = CreateUserByBulkJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Create a new user
 	// (POST /create-user)
 	CreateUser(w http.ResponseWriter, r *http.Request)
+	// Create multiple new user
+	// (POST /create-user-by-bulk)
+	CreateUserByBulk(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -32,6 +68,12 @@ type Unimplemented struct{}
 // Create a new user
 // (POST /create-user)
 func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create multiple new user
+// (POST /create-user-by-bulk)
+func (_ Unimplemented) CreateUserByBulk(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -49,6 +91,20 @@ func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateUserByBulk operation middleware
+func (siw *ServerInterfaceWrapper) CreateUserByBulk(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateUserByBulk(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -173,6 +229,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/create-user", wrapper.CreateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/create-user-by-bulk", wrapper.CreateUserByBulk)
 	})
 
 	return r
