@@ -3,16 +3,18 @@ package validator
 import (
 	api "crm-backend/gen"
 	"crm-backend/internal/models"
-	"fmt"
+	"crm-backend/internal/respository"
 	"slices"
 	"sync"
 )
 
-var SUPPORTED_NATIONALTIY = []string{"Malaysia", "Singapore"}
-var SUPPORTED_RESIDENTIAL = []string{"Malaysian", "Singaporen"}
+type UserValidator struct {
+	CountryDao respository.CountryDaoInterface
+}
 
-func ValidateUsers(users []models.User, respWrapper *api.CreateUserRespWrapper) (validRecord []models.User) {
-	fmt.Println("ValidateUsers")
+func (u *UserValidator) ValidateUsers(users []models.User, respWrapper *api.CreateUserRespWrapper) (validRecord []models.User) {
+	countries, _ := u.CountryDao.GetCountryByRiskLevel([]string{"LOW"})
+	allowNationality, allowResidential := prepareNationalityAndResidentialSet(countries)
 
 	validRecord = make([]models.User, 0, 10)
 	var mu sync.Mutex
@@ -21,7 +23,7 @@ func ValidateUsers(users []models.User, respWrapper *api.CreateUserRespWrapper) 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if validateUser(&user) {
+			if validateUser(&user, allowNationality, allowResidential) {
 				mu.Lock()
 				validRecord = append(validRecord, user)
 				mu.Unlock()
@@ -43,6 +45,18 @@ func ValidateUsers(users []models.User, respWrapper *api.CreateUserRespWrapper) 
 	return validRecord
 }
 
-func validateUser(user *models.User) bool {
-	return slices.Contains(SUPPORTED_NATIONALTIY, user.Nationality) && slices.Contains(SUPPORTED_RESIDENTIAL, user.Residential)
+func prepareNationalityAndResidentialSet(countries []models.Country) ([]string, []string) {
+	allowNationality := make([]string, 0, len(countries))
+	allowResidential := make([]string, 0, len(countries))
+
+	for _, country := range countries {
+		allowNationality = append(allowNationality, country.Nationality)
+		allowResidential = append(allowResidential, country.CountryName)
+	}
+
+	return allowNationality, allowResidential
+}
+
+func validateUser(user *models.User, allowNationality []string, allowResidential []string) bool {
+	return slices.Contains(allowNationality, user.Nationality) && slices.Contains(allowResidential, user.Residential)
 }

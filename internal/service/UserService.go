@@ -10,7 +10,8 @@ import (
 )
 
 type UserService struct {
-	UserDao respository.UserDaoInterface
+	UserDao    respository.UserDaoInterface
+	CountryDao respository.CountryDaoInterface
 }
 
 func (s *UserService) CreateUser(user *models.User) (string, error) {
@@ -31,6 +32,9 @@ func (s *UserService) CreateUserByBulk(users *[]models.User) api.CreateUserRespW
 		FailedUser:  &failed,
 	}
 
+	validator := validator.UserValidator{
+		CountryDao: s.CountryDao,
+	}
 	validRecord := validator.ValidateUsers(*users, respWrapper)
 	s.insertUserToDB(validRecord, respWrapper)
 	return *respWrapper

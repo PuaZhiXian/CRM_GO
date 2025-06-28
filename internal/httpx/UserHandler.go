@@ -16,7 +16,12 @@ type Handler struct {
 
 func InitHandle(db *gorm.DB) *Handler {
 	userDao := &respository.UserDao{DB: db}
-	userService := service.UserService{UserDao: userDao}
+	countryDao := &respository.CountryDao{DB: db}
+
+	userService := service.UserService{
+		UserDao:    userDao,
+		CountryDao: countryDao,
+	}
 	return &Handler{UserService: userService}
 }
 
