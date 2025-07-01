@@ -2,8 +2,6 @@ package respository
 
 import (
 	"crm-backend/internal/models"
-	"fmt"
-
 	"gorm.io/gorm"
 )
 

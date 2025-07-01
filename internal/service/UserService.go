@@ -5,7 +5,9 @@ import (
 	"crm-backend/internal/models"
 	"crm-backend/internal/respository"
 	"crm-backend/internal/validator"
+	"fmt"
 	"log"
+	"math"
 	"sync"
 )
 
@@ -25,6 +27,7 @@ func (s *UserService) CreateUser(user *models.User) (string, error) {
 func (s *UserService) CreateUserByBulk(users *[]models.User) api.CreateUserRespWrapper {
 	log.Println("[CreateUserByBulk] Start")
 
+	allUserChannel := s.getAllUserNameNNationalityNResidential()
 	success := make([]api.CreateUserRespSuccess, 0, 10)
 	failed := make([]api.CreateUserRespFailed, 0, 10)
 	respWrapper := &api.CreateUserRespWrapper{
@@ -35,7 +38,7 @@ func (s *UserService) CreateUserByBulk(users *[]models.User) api.CreateUserRespW
 	validator := validator.UserValidator{
 		CountryDao: s.CountryDao,
 	}
-	validRecord := validator.ValidateUsers(*users, respWrapper)
+	validRecord := validator.ValidateUsers(*users, allUserChannel, respWrapper)
 	s.insertUserToDB(validRecord, respWrapper)
 	return *respWrapper
 }
@@ -70,4 +73,33 @@ func (s *UserService) insertUserToDB(validRecord []models.User, respWrapper *api
 		}()
 	}
 	wg.Wait()
+}
+
+func (s *UserService) getAllUserNameNNationalityNResidential() chan models.User {
+	outChannel := make(chan models.User)
+	total, _ := s.UserDao.GetDataCount()
+	size := 100
+	pages := int(math.Ceil(float64(total) / float64(size)))
+
+	go func() {
+		defer close(outChannel)
+		var wg sync.WaitGroup
+		for page := 0; page < pages; page++ {
+			wg.Add(1)
+			func(n int) {
+				defer wg.Done()
+				userPage, err := s.UserDao.FindUserPage(size, n, []string{"name", "nationality", "residential"})
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				for _, user := range userPage {
+					outChannel <- user
+				}
+			}(page)
+		}
+		wg.Wait()
+	}()
+
+	return outChannel
 }

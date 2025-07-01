@@ -3,9 +3,8 @@ package respository
 import (
 	"crm-backend/internal/models"
 	"crm-backend/pkg/util"
-	"time"
-
 	"gorm.io/gorm"
+	"time"
 )
 
 type UserDao struct {
@@ -35,4 +34,28 @@ func (u *UserDao) UpdateUser(user *models.User) {
 }
 func (u *UserDao) DeleteUserById(id string) {
 	//TODO DELETE USER
+}
+
+func (u *UserDao) GetDataCount() (int64, error) {
+	var total int64
+	if err := u.DB.Model(&models.User{}).Count(&total).Error; err != nil {
+		return total, err
+	}
+	return total, nil
+}
+
+func (u *UserDao) FindUserPage(size int, page int, column []string) ([]models.User, error) {
+	var chunk []models.User
+
+	query := u.DB
+	if len(column) > 0 {
+		query = query.Select(column)
+	}
+
+	err := query.Limit(size).Offset(page * size).Find(&chunk).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return chunk, nil
 }
